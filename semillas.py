@@ -16,6 +16,9 @@ for value in copy:
     else:
         copy.remove('')
 
+for index in range(len(copy)):
+    copy[index] = float(copy[index])
+
 #TRANSFORMACIÓN A DATAFRAME
 final_list, sub_list = [], []
 cont = 0;
@@ -50,6 +53,22 @@ for sub_list in final_list:
 df = pd.DataFrame(data)
 #print(df)
 
+df_dtypes = {
+    "area": float,
+    "perimeter": float,
+    "compactness": float,
+    "length of kernel": float,
+    "width of kernel": float,
+    "asymmetry coefficient": float,
+    "length of kernel groove": float,
+    "classification": int
+}
+
+df = df.astype(df_dtypes)
+#print(df.dtypes)
+#print(df.astype(df_dtypes).dtypes)
+#input("ctrl + c para terminar ejecución")
+
 ######CLUSTERIZACIÓN INICIAL SIN PREPROCESAMIENTO
 
 ##importación de librerías
@@ -71,6 +90,12 @@ from sklearn.metrics.cluster import pair_confusion_matrix, contingency_matrix
 df = df.sample(frac=1, random_state=42)
 #print(df)
 
+scoring = [
+    "adjusted_mutual_info_score",
+    "adjusted_rand_score",
+    "homogeneity_score"
+]
+
 #KMEANS
 param_grid = {
     'n_clusters': [1, 2, 3, 4, 5, 10, 15, 20],
@@ -81,7 +106,7 @@ param_grid = {
 }
 
 kmeans = KMeans()
-grid_kmeans = GridSearchCV(estimator=kmeans, param_grid=param_grid)
+grid_kmeans = GridSearchCV(estimator=kmeans, param_grid=param_grid, scoring=scoring, refit=False)
 print("\n\nIniciando entrenamiento de KMEANS")
 grid_kmeans.fit(df)
 print("\n\nEntrenamiento terminado")
@@ -123,7 +148,7 @@ param_grid = [
 ]
 
 dbscan = DBSCAN()
-grid_dbscan = GridSearchCV(estimator=dbscan, param_grid=param_grid, scoring='accuracy')
+grid_dbscan = GridSearchCV(estimator=dbscan, param_grid=param_grid, scoring=scoring, refit=False)
 print("\n\nIniciando entrenamiento de DBSCAN")
 grid_dbscan.fit(df)
 print("\nEntrenamiento terminado")
@@ -145,7 +170,7 @@ param_grid = [
 ]
 
 hier = AgglomerativeClustering()
-grid_hier = GridSearchCV(estimator=hier, param_grid=param_grid, scoring='accuracy')
+grid_hier = GridSearchCV(estimator=hier, param_grid=param_grid, scoring=scoring, refit=False)
 print("\n\nIniciando entrenamiento de HIERARCHICAL")
 grid_hier.fit(df)
 print("\nEntrenamiento terminado")
@@ -163,8 +188,12 @@ print(f"Best estimator: {grid_dbscan.best_estimator_}\n"+
 print("\n\tHIERARCHICAL")
 print(f"Best estimator: {grid_hier.best_estimator_}\n"+
       f"Best score: {grid_hier.best_score_}")
+"""
 
-
+print("\n\tKMEANS")
+results = pd.DataFrame(grid_kmeans.cv_results_).sort_values(by="rank_test_score")
+print(results)
+"""
 
 
 
